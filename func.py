@@ -593,8 +593,11 @@ def make_fq(code, df_code, df_gbbq, df_cw='', start_date='', end_date='', fqtype
     data = pd.concat([df_code, df_cqcx[['category']][df_code.index[0]:]], axis=1)
     # print(data)
 
-    data['if_trade'].fillna(value=False, inplace=True)  # if_trade列，无效的值填充为False
-    data.fillna(method='ffill', inplace=True)  # 向下填充无效值
+    # data['if_trade'].fillna(value=False, inplace=True)  # if_trade列，无效的值填充为False
+    # data.loc[:, 'if_trade'].fillna(value=False, inplace=True)
+    data['if_trade'] = data['if_trade'].fillna(value=False).infer_objects(copy=False)
+    # data.fillna(method='ffill', inplace=True)  # 向下填充无效值
+    data.ffill(inplace=True)
 
     # 提取info表的'fenhong', 'peigu', 'peigujia',‘songzhuangu'列的值，按日期一一对应，列拼接到data表。
     # 也就是将当日是除权除息日的行，对应的除权除息数据，写入对应的data表的行。
@@ -646,8 +649,10 @@ def make_fq(code, df_code, df_gbbq, df_cw='', start_date='', end_date='', fqtype
     # df_ltg拼接回原DF
     data = pd.concat([data, df_ltg], axis=1)
 
-    data = data.fillna(method='ffill')  # 向下填充无效值
-    data = data.fillna(method='bfill')  # 向上填充无效值  为了弥补开始几行的空值
+    # data = data.fillna(method='ffill')  # 向下填充无效值
+    data = data.ffill()
+    # data = data.fillna(method='bfill')  # 向上填充无效值  为了弥补开始几行的空值
+    data = data.bfill()
     data = data.round({'open': 2, 'high': 2, 'low': 2, 'close': 2, })  # 指定列四舍五入
     if '流通股' in data.columns.to_list():
         data['流通市值'] = data['流通股'] * data['close']

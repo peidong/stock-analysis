@@ -69,8 +69,10 @@ def celue_save(file_list, HS300_信号, tqdm_position=None):
             end_date = df.index[-1]
             celue2 = CeLue.策略2(df, HS300_信号, start_date=start_date, end_date=end_date)
             celue_sell = CeLue.卖策略(df, celue2, start_date=start_date, end_date=end_date)
-            df.loc[start_date:end_date, 'celue_buy'] = celue2
-            df.loc[start_date:end_date, 'celue_sell'] = celue_sell
+            # df.loc[start_date:end_date, 'celue_buy'] = celue2
+            # df.loc[start_date:end_date, 'celue_sell'] = celue_sell
+            df.loc[start_date:end_date, 'celue_buy'] = celue2.astype(float)
+            df.loc[start_date:end_date, 'celue_sell'] = celue_sell.astype(float)
             df.reset_index(drop=True, inplace=True)
             df.to_csv(ucfg.tdx['csv_lday'] + os.sep + stockcode + '.csv', index=False, encoding='gbk')
             df.to_pickle(ucfg.tdx['pickle'] + os.sep + stockcode + ".pkl")
@@ -78,7 +80,8 @@ def celue_save(file_list, HS300_信号, tqdm_position=None):
                             * (len(file_list) - (file_list.index(stockcode) + 1)))
 
         # 提取celue是true的列，单独保存到一个df，返回这个df
-        df_celue = df_celue.append(df.loc[df['celue_buy'] | df['celue_sell']])
+        # df_celue = df_celue.append(df.loc[df['celue_buy'] | df['celue_sell']])
+        df_celue = pd.concat([df_celue, df.loc[df['celue_buy'] | df['celue_sell']]], ignore_index=True)
         # print(f'{process_info} 已用{(time.time() - starttime_tick):.2f}秒 剩余预计{lefttime_tick}秒')
     df_celue['date'] = pd.to_datetime(df_celue['date'], format='%Y-%m-%d')  # 转为时间格式
     df_celue.set_index('date', drop=False, inplace=True)  # 时间为索引。方便与另外复权的DF表对齐合并
@@ -156,7 +159,8 @@ if __name__ == '__main__':
         df_celue = pd.DataFrame()
         # 读取pool的返回对象列表。i.get()是读取方法。拼接每个子进程返回的df
         for i in pool_result:
-            df_celue = df_celue.append(i.get())
+            # df_celue = df_celue.append(i.get())
+            df_celue = pd.concat([df_celue, i.get()], ignore_index=True)
 
     # df_celue 是处理后的所有股票策略信号汇总文件。
     # 下面处理自定义股票板块剔除
