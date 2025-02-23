@@ -58,26 +58,43 @@ def make_stocklist():
 
 
 def load_dict_stock(stocklist):
+    # 初始化一个空字典用于存储股票数据
     dicttemp = {}
+    # 记录开始时间，用于计算加载时间
     starttime_tick = time.time()
+    # 使用tqdm库为stocklist创建一个进度条
     tq = tqdm(stocklist)
+    # 遍历股票列表
     for stockcode in tq:
+        # 设置进度条的描述为当前的股票代码
         tq.set_description(stockcode)
+        # 构建股票数据的pkl文件路径
         pklfile = csvdaypath + os.sep + stockcode + '.pkl'
+        # 读取pkl文件并将其内容存储到字典中，键为股票代码
+        # 注释掉的代码是读取csv文件的示例
         # dict[stockcode] = pd.read_csv(csvfile, encoding='gbk', index_col=None, dtype={'code': str})
         dicttemp[stockcode] = pd.read_pickle(pklfile)
+    # 打印加载完成的消息，并显示用时（秒）
     print(f'载入完成 用时 {(time.time() - starttime_tick):.2f} 秒')
+    # 返回存储股票数据的字典
     return dicttemp
 
 
 def run_celue1(stocklist, df_today, tqdm_position=None):
+    # 检查命令行参数中是否包含'single'，以决定tqdm的显示方式
     if 'single' in sys.argv[1:]:
+        # 如果包含'single'，则使用默认的tqdm显示方式
         tq = tqdm(stocklist[:])
     else:
+        # 否则，使用自定义的tqdm显示方式，不保留进度条，并指定位置
         tq = tqdm(stocklist[:], leave=False, position=tqdm_position)
+    # 遍历股票列表
     for stockcode in tq:
+        # 设置tqdm的描述为当前股票代码
         tq.set_description(stockcode)
+        # 构建股票数据的pkl文件路径
         pklfile = csvdaypath + os.sep + stockcode + '.pkl'
+        # 从pkl文件中读取股票数据
         df_stock = pd.read_pickle(pklfile)
         if df_today is not None:  # 更新当前最新行情，否则用昨天的数据
             df_stock = func.update_stockquote(stockcode, df_stock, df_today)
@@ -90,14 +107,15 @@ def run_celue1(stocklist, df_today, tqdm_position=None):
 
 
 def run_celue2(stocklist, HS300_信号, df_gbbq, df_today, tqdm_position=None):
+    # 检查命令行参数中是否包含'single'，决定tqdm的显示方式
     if 'single' in sys.argv[1:]:
-        tq = tqdm(stocklist[:])
+        tq = tqdm(stocklist[:])  # 如果包含'single'，则正常显示进度条
     else:
-        tq = tqdm(stocklist[:], leave=False, position=tqdm_position)
+        tq = tqdm(stocklist[:], leave=False, position=tqdm_position)  # 否则，不保留进度条，并设置位置
     for stockcode in tq:
-        tq.set_description(stockcode)
-        pklfile = csvdaypath + os.sep + stockcode + '.pkl'
-        df_stock = pd.read_pickle(pklfile)
+        tq.set_description(stockcode)  # 设置进度条的描述为当前股票代码
+        pklfile = csvdaypath + os.sep + stockcode + '.pkl'  # 构建股票数据的pkl文件路径
+        df_stock = pd.read_pickle(pklfile)  # 读取pkl文件中的股票数据
         df_stock['date'] = pd.to_datetime(df_stock['date'], format='%Y-%m-%d')  # 转为时间格式
         df_stock.set_index('date', drop=False, inplace=True)  # 时间为索引。方便与另外复权的DF表对齐合并
         if '09:00:00' < time.strftime("%H:%M:%S", time.localtime()) < '16:00:00' \

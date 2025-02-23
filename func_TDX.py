@@ -15,7 +15,10 @@ def rolling_window(a, window):
     copy from http://stackoverflow.com/questions/6811183/rolling-window-for-1d-arrays-in-numpy
     必须 numpy > 1.20 才有此函数
     """
+    # 从 numpy 的 lib.stride_tricks 模块中导入 sliding_window_view 函数
     from numpy.lib.stride_tricks import sliding_window_view
+    # 使用 sliding_window_view 函数对输入数组 a 进行滑动窗口操作
+    # window_shape 参数指定窗口的大小，这里使用传入的 window 参数
     return sliding_window_view(a, window_shape=window)
 
 
@@ -23,10 +26,15 @@ def REF(value, day):
     """
     引用若干周期前的数据。如果传入列表，返回具体数值。如果传入序列，返回序列
     """
+    # 检查传入的value的类型是否为列表
     if 'list' in str(type(value)):
+        # 如果是列表，使用负索引获取day周期前的数据
         result = value[~day]
+    # 检查传入的value的类型是否为序列（假设为pandas.Series）
     elif 'series' in str(type(value)):
+        # 如果是序列，使用shift方法获取day周期前的数据
         result = value.shift(periods=day)
+    # 返回结果
     return result
 
 
@@ -35,7 +43,7 @@ def MA(value, day) -> float:
     返回当前周期的简单移动平均值。传入可以是列表或序列类型。传出是当前周期的简单移动平均具体值。
     :rtype: float
     """
-    import talib
+    import talib  # 导入talib库，用于金融技术分析
     # result = statistics.mean(value[-day:])
     result = talib.SMA(value, day).iat[-1]
     return result

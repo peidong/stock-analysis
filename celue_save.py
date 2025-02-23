@@ -21,6 +21,7 @@ import user_config as ucfg
 
 
 def celue_save(file_list, HS300_信号, tqdm_position=None):
+    # 定义一个内部函数lambda_update0，用于处理特定类型的值
     def lambda_update0(x):
         if type(x) == float:
             x = np.nan

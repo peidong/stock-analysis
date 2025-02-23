@@ -20,9 +20,9 @@ from rich import print
 def 策略HS300(df_hs300, start_date='', end_date=''):
     """
     HS300信号的作用是，当信号是0时，当日不买股票，1时买入。传出
-    :param start_date:
-    :param end_date:
-    :return: 布尔序列
+    :param start_date: 起始日期，默认为空字符串
+    :param end_date: 结束日期，默认为空字符串
+    :return: 布尔序列，表示是否买入股票
     """
     if start_date == '':
         start_date = df_hs300.index[0]  # 设置为df第一个日期
@@ -115,6 +115,7 @@ def 策略2(df, HS300_信号, start_date='', end_date=''):
     :return bool: 截止日期这天，策略是否触发。true触发，false不触发
     """
 
+    # 如果未指定开始日期，则设置为DataFrame的第一个日期
     if start_date == '':
         start_date = df.index[0]  # 设置为df第一个日期
     if end_date == '':
@@ -197,11 +198,13 @@ def 策略2(df, HS300_信号, start_date='', end_date=''):
 def 卖策略(df, 策略2, start_date='', end_date=''):
     """
 
-    :param df: 个股Dataframe
-    :param 策略2: 买入策略2
-    :param start_date:
-    :param end_date:
-    :return: 卖出策略序列
+
+    定义一个卖出策略函数，根据给定的买入策略2和日期范围，生成卖出策略序列。
+    :param df: 个股Dataframe，包含股票的开盘价、最高价、最低价、收盘价和流通市值等数据。
+    :param 策略2: 买入策略2，一个布尔序列，表示每个交易日是否为买入点。
+    :param start_date: 开始日期，默认为空字符串，表示使用df的第一个日期。
+    :param end_date: 结束日期，默认为空字符串，表示使用df的最后一个日期。
+    :return: 卖出策略序列，一个布尔序列，表示每个交易日是否为卖出点。
     """
 
     if True not in 策略2.to_list():  # 买入策略2 没有买入点

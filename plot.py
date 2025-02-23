@@ -22,9 +22,9 @@ from pyecharts.commons.utils import JsCode
 def markareadata(df_stock):
     # 生成买点卖点区域标示坐标点
     df_celue = df_stock.loc[df_stock['celue_buy'] | df_stock['celue_sell']]  # 提取买卖点列
-    yAxis_max = df_stock['high'].max()
-    markareadata = []
-    temp = []
+    yAxis_max = df_stock['high'].max()  # 获取股票数据中的最高价
+    markareadata = []  # 初始化标记区域数据的列表
+    temp = []  # 临时存储坐标点的列表
     # k是range索引，对应图形第几个点,v是K行的内容，字典类型
     for k, v in df_celue.iterrows():
         temp.append(

@@ -39,7 +39,7 @@ def day2csv(source_dir, file_name, target_dir):
     :param target_dir: str 要保存的路径
     :return: none
     """
-    from struct import unpack
+    from struct import unpack  # 导入struct模块的unpack函数，用于解包二进制数据
     from decimal import Decimal  # 用于浮点数四舍五入
 
     # 以二进制方式打开源文件
@@ -182,34 +182,70 @@ def historyfinancialreader(filepath):
     :param filepath: 字符串类型。传入文件路径
     :return: DataFrame格式。返回解析出的财务文件内容
     """
-    import struct
+    import struct  # 导入struct模块，用于处理二进制数据
 
+    # 打开文件，以二进制读模式
     cw_file = open(filepath, 'rb')
+    # 定义文件头部的打包格式
+    # '<' 表示小端字节序
+    # '1h' 表示一个短整型（2字节）
+    # 'I' 表示一个无符号整型（4字节）
+    # '1H' 表示一个短整型（2字节）
+    # '3L' 表示三个无符号整型（各4字节）
     header_pack_format = '<1hI1H3L'
+    # 计算文件头部的大小
     header_size = struct.calcsize(header_pack_format)
+    # 计算股票项的大小
+    # '6s' 表示6个字节的字符串
+    # '1c' 表示1个字节的字符
+    # '1L' 表示一个无符号整型（4字节）
     stock_item_size = struct.calcsize("<6s1c1L")
+    # 读取文件头部数据
     data_header = cw_file.read(header_size)
+    # 解包文件头部数据
     stock_header = struct.unpack(header_pack_format, data_header)
+    # 获取股票最大数量
     max_count = stock_header[2]
+    # 获取报告日期
     report_date = stock_header[1]
+    # 获取报告大小
     report_size = stock_header[4]
+    # 计算报告字段数量
     report_fields_count = int(report_size / 4)
+    # 定义报告数据的打包格式
+    # '<{}f' 表示多个浮点型（每个4字节），数量由report_fields_count决定
     report_pack_format = '<{}f'.format(report_fields_count)
+    # 初始化结果列表
     results = []
+    # 遍历所有股票项
     for stock_idx in range(0, max_count):
+        # 定位到当前股票项的位置
         cw_file.seek(header_size + stock_idx * struct.calcsize("<6s1c1L"))
+        # 读取股票项数据
         si = cw_file.read(stock_item_size)
+        # 解包股票项数据
         stock_item = struct.unpack("<6s1c1L", si)
+        # 解码股票代码
         code = stock_item[0].decode("utf-8")
+        # 获取财务数据偏移地址
         foa = stock_item[2]
+        # 定位到财务数据位置
         cw_file.seek(foa)
+        # 读取财务数据
         info_data = cw_file.read(struct.calcsize(report_pack_format))
+        # 获取数据大小
         data_size = len(info_data)
+        # 解包财务数据
         cw_info = list(struct.unpack(report_pack_format, info_data))
+        # 将股票代码插入到财务数据列表的第一个位置
         cw_info.insert(0, code)
+        # 将当前股票的财务数据添加到结果列表
         results.append(cw_info)
+    # 关闭文件
     cw_file.close()
+    # 将结果列表转换为DataFrame格式
     df = pd.DataFrame(results)
+    # 返回DataFrame
     return df
 
 
@@ -223,12 +259,12 @@ class ManyThreadDownload:
     # 获取每个线程下载的区间
     def get_range(self):
         ranges = []
-        offset = int(self.total / self.num)
+        offset = int(self.total / self.num)  # 计算每个线程应下载的数据量
         for i in range(self.num):
             if i == self.num - 1:
-                ranges.append((i * offset, ''))
+                ranges.append((i * offset, ''))  # 最后一个线程下载剩余部分
             else:
-                ranges.append(((i * offset), (i + 1) * offset - 1))
+                ranges.append(((i * offset), (i + 1) * offset - 1))  # 其他线程按等分下载
         return ranges  # [(0,99),(100,199),(200,"")]
 
     # 通过传入开始和结束位置来下载文件
@@ -265,8 +301,10 @@ class ManyThreadDownload:
             # self.fd.write(res.content)                                  # 将下载文件保存到 fd所打开的文件里
 
     def run(self, url, name):
+        # 将传入的URL和文件名赋值给实例变量
         self.url = url
         self.name = name
+        # 获取文件的总大小，通过发送HEAD请求获取Content-Length头部信息
         self.total = int(requests.head(url).headers['Content-Length'])
         # file_size = int(urlopen(self.url).info().get('Content-Length', -1))
         file_size = self.total
@@ -299,7 +337,7 @@ class ManyThreadDownload:
         self.fd.close()
 
 
-@retry(tries=3, delay=3)  # 无限重试装饰性函数
+@retry(tries=3, delay=3)  # 无限重试装饰性函数，指定最大重试次数为3次，每次重试间隔3秒
 def dowload_url(url):
     """
     :param url:要下载的url
@@ -322,6 +360,7 @@ def list_localTDX_cwfile(ext_name):
     :param ext_name: str类型。文件扩展名。返回指定扩展名的文件列表
     :return: list类型。财务专业文件列表
     """
+    # 设置通达信财务文件目录路径
     cw_path = ucfg.tdx['tdx_path'] + os.sep + "vipdoc" + os.sep + "cw"
     tmplist = os.listdir(cw_path)  # 遍历通达信vipdoc/cw目录
     cw_filelist = []
@@ -337,14 +376,23 @@ def readall_local_cwfile():
     将全部财报文件读到df_cw字典里。会占用1G内存，但处理速度比遍历CSV方式快很多
     :return: 字典形式，所有财报内容。
     """
+    # 打印开始载入所有财报文件到内存的消息
     print(f'开始载入所有财报文件到内存')
+    # 初始化一个空字典，用于存储财报文件内容
     dict = {}
+    # 获取cw目录下的所有文件名列表
     cwfile_list = os.listdir(ucfg.tdx['csv_cw'])  # cw目录 生成文件名列表
+    # 记录开始时间，用于计算读取文件的总时间
     starttime_tick = time.time()
+    # 遍历cw目录下的所有文件
     for cwfile in cwfile_list:
+        # 检查文件大小，如果不为0则读取文件
         if os.path.getsize(ucfg.tdx['csv_cw'] + os.sep + cwfile) != 0:
+            # 读取pickle格式的财报文件，并将其存储到字典中，键为文件名（去掉前4个字符和后4个字符）
             dict[cwfile[4:-4]] = pd.read_pickle(ucfg.tdx['csv_cw'] + os.sep + cwfile, compression=None)
+    # 打印读取所有财报文件完成的消息，并计算用时
     print(f'读取所有财报文件完成 用时{(time.time() - starttime_tick):.2f}秒')
+    # 返回包含所有财报内容的字典
     return dict
 
 

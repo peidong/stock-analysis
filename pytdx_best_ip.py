@@ -75,46 +75,61 @@ future_ip = [{'ip': '106.14.95.149', 'port': 7727, 'name': '扩展市场上海�
 
 
 def ping(ip, port=7709, type_='stock'):
+    # 初始化TdxHq_API和TdxExHq_API对象
     api = TdxHq_API()
     apix = TdxExHq_API()
+    # 记录当前时间
     __time1 = datetime.datetime.now()
     try:
+        # 如果type_为'stock'，则尝试连接股票API
         if type_ in ['stock']:
             with api.connect(ip, port, time_out=0.7):
+                # 获取证券列表
                 res = api.get_security_list(0, 1)
                 # print(len(res))
                 if res is not None:
+                    # 如果返回结果长度大于800，则认为响应良好
                     if len(res) > 800:
                         print('GOOD RESPONSE {}'.format(ip))
                         return datetime.datetime.now() - __time1
                     else:
+                        # 否则认为响应不良
                         print('BAD RESPONSE {}'.format(ip))
                         return datetime.timedelta(9, 9, 0)
                 else:
 
+                    # 如果返回结果为None，则认为响应不良
                     print('BAD RESPONSE {}'.format(ip))
                     return datetime.timedelta(9, 9, 0)
+        # 如果type_为'future'，则尝试连接期货API
         elif type_ in ['future']:
             with apix.connect(ip, port, time_out=0.7):
+                # 获取期货合约数量
                 res = apix.get_instrument_count()
                 if res is not None:
+                    # 如果返回结果大于20000，则认为响应良好
                     if res > 20000:
                         print('GOOD RESPONSE {}'.format(ip))
                         return datetime.datetime.now() - __time1
                     else:
+                        # 否则认为响应不良
                         print('️Bad FUTUREIP REPSONSE {}'.format(ip))
                         return datetime.timedelta(9, 9, 0)
                 else:
+                    # 如果返回结果为None，则认为响应不良
                     print('️Bad FUTUREIP REPSONSE {}'.format(ip))
                     return datetime.timedelta(9, 9, 0)
     except Exception as e:
+        # 捕获异常
         if isinstance(e, TypeError):
+            # 如果异常为TypeError，则提示用户重新安装pytdx
             print(e)
             print('Tushare内置的pytdx版本和最新的pytdx 版本不同, 请重新安装pytdx以解决此问题')
             print('pip uninstall pytdx')
             print('pip install pytdx')
 
         else:
+            # 否则认为响应不良
             print('BAD RESPONSE {}'.format(ip))
         return datetime.timedelta(9, 9, 0)
 

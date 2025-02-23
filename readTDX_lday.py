@@ -64,6 +64,7 @@ def update_lday():
     # 读取通达信正常交易状态的股票列表。infoharbor_spec.cfg退市文件不齐全，放弃使用
     tdx_stocks = pd.read_csv(ucfg.tdx['tdx_path'] + '/T0002/hq_cache/infoharbor_ex.code',
                              sep='|', header=None, index_col=None, encoding='gbk', dtype={0: str})
+    # 根据股票代码的首位字符，将股票分为深市和沪市
     file_listsh = tdx_stocks[0][tdx_stocks[0].apply(lambda x: x[0:1] == "6")]
     file_listsz = tdx_stocks[0][tdx_stocks[0].apply(lambda x: x[0:1] != "6")]
 

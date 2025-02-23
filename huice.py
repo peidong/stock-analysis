@@ -29,10 +29,14 @@ os.remove('temp.csv') if os.path.exists("temp.csv") else None
 
 
 def update_stockcode(stockcode):
+    # 检查股票代码的第一个字符是否为'6'
     if stockcode[0:1] == '6':
+        # 如果是'6'，则表示该股票属于上海证券交易所，添加".XSHG"后缀
         stockcode = stockcode + ".XSHG"
     else:
+        # 如果不是'6'，则表示该股票属于深圳证券交易所，添加".XSHE"后缀
         stockcode = stockcode + ".XSHE"
+    # 返回更新后的股票代码
     return stockcode
 
 
@@ -43,6 +47,7 @@ def init(context):
     context.target_value = xiadan_target_value  # 设定具体股票总买入市值
     context.order_type = order_type  # 下单模式
 
+    # 读取策略汇总CSV文件
     df_celue = pd.read_csv(ucfg.tdx['csv_gbbq'] + os.sep + 'celue汇总.csv',
                            index_col=0, encoding='gbk', dtype={'code': str})
     df_celue['code'] = df_celue['code'].apply(lambda x: update_stockcode(x))  # 升级股票代码，匹配rqalpha
@@ -53,7 +58,9 @@ def init(context):
 
 # before_trading此函数会在每天策略交易开始前被调用，当天只会被调用一次
 def before_trading(context):
+    # 初始化一个空的DataFrame，用于存储股票的盈亏数据
     context.stock_pnl = pd.DataFrame()
+    # 获取当前日期，格式为'YYYY-MM-DD'
     current_date = context.now.strftime('%Y-%m-%d')
     # 提取当天的df_celue
     if current_date in context.df_celue.index:
@@ -64,7 +71,9 @@ def before_trading(context):
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
+    # 检查context.df_today是否不为空
     if context.df_today is not None:
+        # 遍历context.df_today的每一行
         for index, row in context.df_today.iterrows():
             # logger.info(index, row)
 
